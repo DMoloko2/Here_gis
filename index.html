@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>New map</title>
+
+    <link rel="stylesheet" type="text/css" href="https://js.api.here.com/v3/3.0/mapsjs-ui.css?dp-version=1549984893" />
+    <script type="text/javascript" src="https://js.api.here.com/v3/3.0/mapsjs-core.js"></script>
+    <script type="text/javascript" src="https://js.api.here.com/v3/3.0/mapsjs-service.js"></script>
+    <script type="text/javascript" src="https://js.api.here.com/v3/3.0/mapsjs-ui.js"></script>
+    <script type="text/javascript" src="https://js.api.here.com/v3/3.0/mapsjs-mapevents.js"></script>
+
+
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css"
+        integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA==" crossorigin=""/>
+
+        <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"
+        integrity="sha512-QVftwZFqvtRNi0ZyCtsznlKSWOStnDORoefr1enyq5mVL4tmKB3S/EnC3rRJcxCPavG10IcrVGSmPh6Qw5lwrg=="
+        crossorigin=""></script>
+
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-realtime/2.1.1/leaflet-realtime.min.js"></script>
+
+    <!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+
+<!-- jQuery library -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+<!-- Latest compiled JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+
+      <style type="text/css">
+        html, body{
+          width: 100%;
+          height: 100%;
+          margin: 0px;
+        }
+        #map{
+          width: 100%;
+          height: 100%;
+          <!-- margin-top: 50px; -->
+        }
+        #gosus{
+          paddind-top: 10px;
+        }
+        .navbar{
+          margin-bottom: 0;
+          width: 100%;
+        }
+        .area1{
+          width: 228px;
+        }
+      </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-inverse">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <a class="navbar-brand" href="#">АСПД</a>
+        </div>
+        <ul class="nav navbar-nav">
+          <li class="active"><a href="">Обновить</a></li>
+          <li class="dropdown">
+            <a class="dropdown-toggle" data-toggle="dropdown" href="#">Дорога
+            <span class="caret"></span></a>
+            <ul class="dropdown-menu">
+              <li><a onclick="updateMarket(pf9SP3BY,3I6gfQMjWW,59,	30, 5)">Покрытие</a></li>
+              <li><a onclick="showlayer('nZ7p4rYZ')">Перекрестки</a></li>
+              <li><a onclick="showlayer('lVniO7QB')">Знак</a></li>
+            </ul>
+          </li>
+          <li><a onclick="showlayer('pf9SP3BY')">Мусорки</a></li>
+          <li><a>Статус жалобы</a></li>
+        </ul>
+        <ul class="nav navbar-nav navbar-right">
+          <li><a href="#"><span class="glyphicon glyphicon-user"></span> Иванов И.И.</a></li>
+          <li><a href="#"><span class="glyphicon glyphicon-log-in"></span> Выйти</a></li>
+        </ul>
+      </div>
+    </nav>
+    <div id="map"></div>
+
+        <script type="text/javascript">
+          var tokenmy = "AEhCRKyYKTKSY1L5cN778sM";
+
+          let M = {
+              'AppId': 'T10AXbgj4fr1AK1w2Tbp',
+              'AppCode': 'EZlvhweP2mNW9w12TH4z5w',
+              'Lat' : 59.9576,
+              'Lng' : 30.2882,
+              'Zoom' : 20,
+              'TileLayerUrl': {}
+          }
+          const map = L.map('map').setView([M.Lat, M.Lng], M.Zoom);
+          function createbasemap() {
+            // Base Map
+            M.TileLayerUrl = (style) => `https://2.base.maps.api.here.com/maptile/2.1/maptile/newest/${style}/{z}/{x}/{y}/512/png8?app_id=${M.AppId}&app_code=${M.AppCode}&ppi=320&lg=rus`
+
+            L.tileLayer(M.TileLayerUrl('reduced.night')).addTo(map)
+          }
+
+
+
+          createbasemap();
+          function showlayer(spaceid){
+
+            map.eachLayer(function(layer){
+              map.removeLayer(layer);
+            });
+
+            createbasemap();
+
+            var myIcon = L.icon({
+                iconUrl: 'trash.png',
+                iconSize: [38, 95],
+                iconAnchor: [22, 94],
+                popupAnchor: [-3, -76],
+                shadowUrl: 'shadow.png',
+                shadowSize: [68, 95],
+                shadowAnchor: [22, 94]
+            });
+            
+
+                              let geoDataUrl = 'https://xyz.api.here.com/hub/spaces/'+spaceid+'/iterate?access_token='+tokenmy+''
+
+                              // let isolineUrl = `https://isoline.route.api.here.com/routing/7.2/calculateisoline.json?app_id=${M.AppId}&app_code=${M.AppCode}&jsonattributes=41&mode=fastest;car&quality=1&range=5000&rangetype=distance&start=geo!stopOver!55.757579,37.606114`
+
+                              let realTimeLayer = 'https://xyz.api.here.com/hub/spaces/'+spaceid+'/iterate?access_token='+tokenmy+''
+
+
+                            fetch(geoDataUrl).then(res => {
+                              res.json().then(data => {
+                                L.geoJSON(data, {
+                                pointToLayer: function(geoJsonPoint, latlng) {
+                                  var a = geoJsonPoint.properties.name.split(" ");
+                                  console.log(geoJsonPoint);
+                                  switch (a[0]) {
+                                    case "Мусорка": {
+                                      if(geoJsonPoint.properties.kolvo>8)
+                                      return L.circleMarker(latlng, {radius:5, color:'red'})
+                                      .on('click', e => {
+                                        L.popup()
+                                        .setLatLng(e.latlng)
+                                        .setContent(`
+                                          ${e.sourceTarget.feature.properties.name}
+                                          <br>
+                                          Заявок: ${e.sourceTarget.feature.properties.kolvo}
+                                          <!-- <textarea class="area1" name="problem" required></textarea><br> -->
+                                          <p><input name="dzen" type="radio" value="nedzen" checked> Полный бак</p>
+                                          <p><input name="dzen" type="radio" value="dzen"> Состояние неудовлетворительное</p>
+                                          <button id=but1 onclick=" $('.leaflet-popup').hide();">Отправить</button>
+                                        `)
+                                        .openOn(map);
+                                        })
+
+                                      else
+                                        return L.circleMarker(latlng, {radius:5, color:'blue'})
+                                    .on('click', e => {
+                                      L.popup()
+                                      .setLatLng(e.latlng)
+                                      .setContent(`
+                                        ${e.sourceTarget.feature.properties.name}
+                                        <br>
+                                        Заявок: ${e.sourceTarget.feature.properties.kolvo}
+                                        <!-- <textarea class="area1" name="problem" required></textarea><br> -->
+                                        <p><input name="dzen" type="radio" value="nedzen" checked> Полный бак</p>
+                                        <p><input name="dzen" type="radio" value="dzen"> Состояние неудовлетворительное</p>
+                                        <p><button>Прикрепить фото</button></p>
+                                        <button id=but1 onclick=" $('.leaflet-popup').hide();">Отправить</button>
+                                      `)
+                                      .openOn(map);
+                                      })
+                                        break;
+                                    }
+
+
+                                  case "Перекресток":{
+                                    if(geoJsonPoint.properties.kolvo>8)
+                                    return L.circleMarker(latlng, {radius:5, color:'red'})
+                                    .on('click', e => {
+                                      L.popup()
+                                      .setLatLng(e.latlng)
+                                      .setContent(`
+                                        ${e.sourceTarget.feature.properties.name}
+                                        <br>
+                                        Заявок: ${e.sourceTarget.feature.properties.kolvo}
+                                        <!-- <textarea class="area1" name="problem" required></textarea><br> -->
+                                        <p><input name="dzen" type="radio" value="nedzen" checked> Полный бак</p>
+                                        <p><input name="dzen" type="radio" value="dzen"> Состояние неудовлетворительное</p>
+                                        <p><button>Прикрепить фото</button></p>
+                                        <button id=but1 onclick=" $('.leaflet-popup').hide();">Отправить</button>
+                                      `)
+                                      .openOn(map);
+                                      })
+
+                                    else
+                                      return L.circleMarker(latlng, {radius:5, color:'blue'})
+                                  .on('click', e => {
+                                    L.popup()
+                                    .setLatLng(e.latlng)
+                                    .setContent(`
+                                      ${e.sourceTarget.feature.properties.name}
+                                      <br>
+                                      Заявок: ${e.sourceTarget.feature.properties.kolvo}
+                                      <!-- <textarea class="area1" name="problem" required></textarea><br> -->
+                                      <p><input name="dzen" type="radio" value="nedzen" checked> Полный бак</p>
+                                      <p><input name="dzen" type="radio" value="dzen"> Состояние неудовлетворительное</p>
+                                      <p><button>Прикрепить фото</button></p>
+                                      <button id=but1 onclick=" $('.leaflet-popup').hide();">Отправить</button>
+                                    `)
+                                    .openOn(map);
+                                    })
+
+                                    break;
+                                  }
+
+                                  }
+
+
+
+                                //   if(geoJsonPoint.properties.kolvo>8)
+                                //   return L.circleMarker(latlng, {radius:5, color:'red'})
+                                //   .on('click', e => {
+                                //     L.popup()
+                                //     .setLatLng(e.latlng)
+                                //     .setContent(`
+                                //       ${e.sourceTarget.feature.properties.name}
+                                //       <br>
+                                //       Заявок: ${e.sourceTarget.feature.properties.kolvo}
+                                //       <!-- <textarea class="area1" name="problem" required></textarea><br> -->
+                                //       <p><input name="dzen" type="radio" value="nedzen" checked> Полный бак</p>
+                                //       <p><input name="dzen" type="radio" value="dzen"> Состояние неудовлетворительное</p>
+                                //       <button id=but1 onclick=" $('.leaflet-popup').hide();">Отправить</button>
+                                //     `)
+                                //     .openOn(map);
+                                //     })
+                                //
+                                //   else
+                                //     return L.circleMarker(latlng, {radius:5, color:'blue'})
+                                // .on('click', e => {
+                                //   L.popup()
+                                //   .setLatLng(e.latlng)
+                                //   .setContent(`
+                                //     ${e.sourceTarget.feature.properties.name}
+                                //     <br>
+                                //     Заявок: ${e.sourceTarget.feature.properties.kolvo}
+                                //     <!-- <textarea class="area1" name="problem" required></textarea><br> -->
+                                //     <p><input name="dzen" type="radio" value="nedzen" checked> Полный бак</p>
+                                //     <p><input name="dzen" type="radio" value="dzen"> Состояние неудовлетворительное</p>
+                                //     <button id=but1 onclick=" $('.leaflet-popup').hide();">Отправить</button>
+                                //   `)
+                                //   .openOn(map);
+                                //   })
+
+
+                                }
+                                }).addTo(map)
+                              })
+                            })
+
+
+                            L.realtime(realTimeLayer, {
+                              interval: 1 * 1000,
+                              getFeatureId: function(f) {
+                                return f.id;
+                              }
+                            }).addTo(map)
+          }
+
+
+
+
+
+            var mark;
+          function addMArket(lng, lat) {
+            if($('.area1').val()==0)
+            {
+
+            }
+            else{
+
+
+              var data1 = "{\"type\":\"Feature\",\"id\":\"BfiimUxHjj\",\"geometry\":{\"type\":\"Point\",\"coordinates\":["+lat+","+lng+"]},\"properties\":{\"name\":\"Anfield\",\"@ns:com:here:xyz\":{\"createdAt\":1517504700726,\"updatedAt\":1517504700726,\"space\":\"x-demospace\",\"tags\":[\"football\",\"stadium\"]},\"amenity\":\"Football Stadium\",\"capacity\":54074,\"popupContent\":\"Home of Liverpool Football Club\"}}";
+
+            $.ajax({
+                type: "PUT",
+                contentType: "application/json",
+                url: "https://xyz.api.here.com/hub/spaces/lVniO7QB/features/?access_token=AEhCRKyYKTKSY1L5cN778sM",
+                data: data1,
+
+              });
+              mark=0;
+                $('.leaflet-popup').hide();
+              }
+          }
+
+function updateMarket(spaceID,featureID,x,y,znach){
+
+var data1 =" { \"type\": \"Feature\", \"id\": featureID, \"properties\": { \"kolvo\": znach }, \"geometry\": { \"type\": \"Point\", \"coordinates\" : [ x, y ] }}";
+  //
+  // $.ajax({
+  //     type: "PUT",
+  //     contentType: "application/json",
+  //     url: "https://xyz.api.here.com/hub/spaces/"+spaceID+"/features/"+featureID+"?access_token=AEhCRKyYKTKSY1L5cN778sM",
+  //     data: data1,
+  //
+  //   });
+
+
+
+
+    mark=0;
+      $('.leaflet-popup').hide();
+
+
+}
+updateMarket("pf9SP3BY", "3I6gfQMjWW" ,"59",	"30", "5");
+
+
+
+
+
+
+
+          //****************************************
+          // map.on('click', function(e){
+          //   mark=  L.marker(e.latlng);
+          //   var lat=e.latlng.lat;
+          //   var lng=e.latlng.lng
+          //    console.log(e.latlng.lng);
+          //    console.log(e.latlng.lat);
+          //   mark.addTo(map);
+          //   L.popup()
+          //   .setLatLng(e.latlng)
+          //   .setContent(` <br>
+          //
+          //   <textarea class="area1" name="problem" required></textarea><br>
+          //   <button onclick="addMArket(`+lat+`,`+lng+`)" id=but>Все хуёво</button>
+          //
+          //   `)
+          //   .openOn(map);
+          //   $('.leaflet-popup-close-button').on('click', function(e){
+          //     map.removeLayer(mark);
+          //     mark=0;
+          //
+          //   })
+          //     })
+          //****************************************
+
+
+
+
+            // console.log(e.latlng);
+
+
+
+            // Map settings manager
+
+
+
+
+            // Url for downloading data
+            //let geoDataUrl = 'https://xyz.api.here.com/hub/spaces/pf9SP3BY/iterate?access_token=Af_VFDi4lbBIl6EkdVneOdY'
+
+            // let isolineUrl = `https://isoline.route.api.here.com/routing/7.2/calculateisoline.json?app_id=${M.AppId}&app_code=${M.AppCode}&jsonattributes=41&mode=fastest;car&quality=1&range=5000&rangetype=distance&start=geo!stopOver!55.757579,37.606114`
+
+            //let realTimeLayer = `https://xyz.api.here.com/hub/spaces/pf9SP3BY/iterate?access_token=Af_VFDi4lbBIl6EkdVneOdY`
+
+
+
+            // fetch(isolineUrl).then(res => {
+            //     res.json().then(data => {
+            //         let splitArray = (array, part) => {
+            //             var tmp = []
+            //             for(var i = 0; i < array.length; i += part) {
+            //                 tmp.push(array.slice(i, i + part));
+            //             }
+            //             return tmp;
+            //         }
+            //         L.polygon(splitArray(data.response.isoline[0].component[0].shape,2),{color: '#fff'}).addTo(map)
+            //     })
+            // })
+
+
+
+
+
+
+//             map.addEventListener('click', function(ev) {
+//           var target = ev.target;
+//     if (target instanceof mapsjs.map.Marker)
+//     {
+//       L.popup()
+//          .setLatLng(target.latlng)
+//          .setContent(`${e.sourceTarget.feature.properties.name} <br>
+//           <button id=but>Все хуёво</button>
+//           `);
+//           console.log(target.latlang)
+//     }
+//
+// });
+
+        </script>
+  </body>
+</html>
