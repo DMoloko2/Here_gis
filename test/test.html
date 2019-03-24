@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+ <head>
+    <title>HERE JavaScript API</title>
+    <meta name="viewport" content="initial-scale=1.0, width=device-width" />
+    <script src="http://js.api.here.com/v3/3.0/mapsjs-core.js" type="text/javascript" charset="utf-8"></script>
+    <script src="http://js.api.here.com/v3/3.0/mapsjs-service.js" type="text/javascript" charset="utf-8"></script>
+    <script src="https://js.cit.api.here.com/v3/3.0/mapsjs-mapevents.js"type="text/javascript" ></script>
+    <style>
+     html, body, #map {
+       height:100%;
+       width:100%;
+       margin:0px;
+     }
+   </style>
+ </head>
+ <body>
+    <button onclick="moveMapToBerlin(map)">moveMapToBerlin</button>
+    <button onclick="setMapViewBounds(map)">setMapViewBounds</button>
+    <button onclick="enableTrafficInfo(map)">enableTrafficInfo</button>
+    <button onclick="moveMapToBerlin(map)">but4</button>
+    <button onclick="moveMapToBerlin(map)">but5</button>
+    <div id="map"></div>
+    <script>
+        // Инициализация платформы
+        var platform = new H.service.Platform({
+         'app_id': 'T10AXbgj4fr1AK1w2Tbp',
+         'app_code': 'EZlvhweP2mNW9w12TH4z5w'
+        });
+
+        // Получение списка базовых карт
+        var maptypes = platform.createDefaultLayers({lg:"rus"});
+
+        // Инициализация объекта карты и рендеринг
+        var map = new H.Map(
+        document.getElementById('map'),
+        maptypes.normal.map,
+        {
+          zoom: 17,
+          center: { lng: 30.285176038742065, lat: 59.957309275132005 }
+        });
+        // Возможность изменения масштаба и перемещения
+        var mapEvents = new H.mapevents.MapEvents(map);
+        var behavior = new H.mapevents.Behavior(mapEvents);
+    </script>
+    <script>
+      function moveMapToBerlin(map){
+        map.setCenter({lat:52.5159, lng:13.3777});
+        map.setZoom(14);
+      }
+      function setMapViewBounds(map){
+        var bbox = new H.geo.Rect(42.3736,-71.0751,42.3472,-71.0408);
+        map.setViewBounds(bbox);
+      }
+      function enableTrafficInfo(map) {
+        // Center map on New York
+        map.setCenter({lat: 59.957309275132005, lng: 30.285176038742065});
+        map.setZoom(15);
+
+        // Show traffic tiles
+        map.setBaseLayer(defaultLayers.normal.traffic);
+
+        // Enable traffic incidents layer
+        map.addLayer(defaultLayers.incidents);
+      }
+    </script>
+ </body>
+</html>

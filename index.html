@@ -71,6 +71,7 @@
             </ul>
           </li>
           <li><a onclick="showlayer('pf9SP3BY')">Мусорки</a></li>
+          <li><a onclick="showlayer('mLUioKUK')">Дома</a></li>
           <li><a>Статус жалобы</a></li>
         </ul>
         <ul class="nav navbar-nav navbar-right">
@@ -80,6 +81,8 @@
       </div>
     </nav>
     <div id="map"></div>
+
+
 
         <script type="text/javascript">
           var tokenmy = "AEhCRKyYKTKSY1L5cN778sM";
@@ -120,7 +123,7 @@
                 shadowSize: [68, 95],
                 shadowAnchor: [22, 94]
             });
-            
+
 
                               let geoDataUrl = 'https://xyz.api.here.com/hub/spaces/'+spaceid+'/iterate?access_token='+tokenmy+''
 
@@ -145,10 +148,12 @@
                                         .setContent(`
                                           ${e.sourceTarget.feature.properties.name}
                                           <br>
-                                          Заявок: ${e.sourceTarget.feature.properties.kolvo}
-                                          <!-- <textarea class="area1" name="problem" required></textarea><br> -->
-                                          <p><input name="dzen" type="radio" value="nedzen" checked> Полный бак</p>
-                                          <p><input name="dzen" type="radio" value="dzen"> Состояние неудовлетворительное</p>
+                                          Заявок: ${e.sourceTarget.feature.properties.kolvo} <br>
+                                          <textarea class="area1" name="problem"></textarea><br>
+                                          <p><input name="dzen" type="radio" value="nedzen" checked> Теплообеспечение</p>
+                                          <p><input name="dzen" type="radio" value="dzen"> Водоснабжение</p>
+                                          <p><input name="dzen" type="radio" value="nedzen"> Водоотведение</p>
+                                          <p><input name="dzen" type="radio" value="dzen"> Газоснабжение</p>
                                           <button id=but1 onclick=" $('.leaflet-popup').hide();">Отправить</button>
                                         `)
                                         .openOn(map);
@@ -156,6 +161,7 @@
 
                                       else
                                         return L.circleMarker(latlng, {radius:5, color:'blue'})
+                                        return L.marker(latlng, {radius:5, color:'blue'})
                                     .on('click', e => {
                                       L.popup()
                                       .setLatLng(e.latlng)
@@ -323,30 +329,30 @@ updateMarket("pf9SP3BY", "3I6gfQMjWW" ,"59",	"30", "5");
 
 
 
-          //****************************************
-          // map.on('click', function(e){
-          //   mark=  L.marker(e.latlng);
-          //   var lat=e.latlng.lat;
-          //   var lng=e.latlng.lng
-          //    console.log(e.latlng.lng);
-          //    console.log(e.latlng.lat);
-          //   mark.addTo(map);
-          //   L.popup()
-          //   .setLatLng(e.latlng)
-          //   .setContent(` <br>
-          //
-          //   <textarea class="area1" name="problem" required></textarea><br>
-          //   <button onclick="addMArket(`+lat+`,`+lng+`)" id=but>Все хуёво</button>
-          //
-          //   `)
-          //   .openOn(map);
-          //   $('.leaflet-popup-close-button').on('click', function(e){
-          //     map.removeLayer(mark);
-          //     mark=0;
-          //
-          //   })
-          //     })
-          //****************************************
+          // ****************************************
+          map.on('click', function(e){
+            mark=  L.marker(e.latlng);
+            var lat=e.latlng.lat;
+            var lng=e.latlng.lng
+             console.log(e.latlng.lng);
+             console.log(e.latlng.lat);
+            mark.addTo(map);
+            L.popup()
+            .setLatLng(e.latlng)
+            .setContent(` <br>
+
+            <textarea class="area1" name="problem" required></textarea><br>
+            <button onclick="addMArket(`+lat+`,`+lng+`)" id=but>Отправть</button>
+
+            `)
+            .openOn(map);
+            $('.leaflet-popup-close-button').on('click', function(e){
+              map.removeLayer(mark);
+              mark=0;
+
+            })
+              })
+          // ****************************************
 
 
 
