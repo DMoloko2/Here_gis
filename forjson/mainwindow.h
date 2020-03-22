@@ -36,7 +36,7 @@ private:
     QNetworkReply *reply;
     QUrl apiUrl;
     QByteArray requestString;
-    void reqq(QByteArray);
+    void reqq(const char *);
     QTcpServer *m_ptcpServer;
     quint16 m_nNextBlockSize;
     void sendToClient(QTcpSocket* pSocket, const QString& str);
@@ -50,6 +50,9 @@ private:
     void processMessage(const QString &message);
     void socketDisconnected();
     void refreshDB();
+    QTcpSocket* pClientSocket;
+    int count=0;
+    int typee;
 
 public slots:
    void getReplyFinished();
@@ -64,7 +67,10 @@ public slots:
 
 private slots:
    void on_pushButton_clicked();
+   void slot1(QStringList);
 
+signals:
+   void sig1(QStringList);
 
 };
 

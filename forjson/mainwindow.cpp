@@ -14,35 +14,19 @@
         ui->setupUi(this);
 
         web=new QWebSocketServer("Server",QWebSocketServer::NonSecureMode);
-
         web->listen(QHostAddress::Any, 1796);
-
-//        qDebug()<<web->sslConfiguration().protocol();
-//        qDebug()<<web->supportedVersions();
-        m_ptcpServer=new QTcpServer;
-        connect(m_ptcpServer, SIGNAL(newConnection() ),this, SLOT(slotNewConnection())) ;
-
-
-        sqlConnect();
-
-        connect(web, SIGNAL(newConnection()),
-                this, SLOT(onNewConnection()));
+        connect(web, SIGNAL(newConnection()),this, SLOT(onNewConnection()));
 
 
 
-        //qDebug()<<vec;
-        if (!m_ptcpServer->listen(QHostAddress::Any, 5545))
-        {
-        QMessageBox::critical(nullptr,
-        "Server Error",
-        "Unable to start the server:"
-        + m_ptcpServer->errorString()) ;
-        m_ptcpServer->close( );
-        }
-
-        refreshDB();
 
 
+
+
+
+
+
+        connect(this,SIGNAL(sig1(QStringList)),this,SLOT(slot1(QStringList)));
 
         QObject::connect(&soc, SIGNAL(connected()), SLOT(slotConnected()));
         QObject::connect(&soc, SIGNAL(readyRead()), SLOT(slotReadyRead()));
@@ -55,10 +39,14 @@
 
     /*virtual*/ void MainWindow::slotNewConnection()            //слот для нового подлючения
     {
-    QTcpSocket* pClientSocket = m_ptcpServer->nextPendingConnection();
+    pClientSocket = m_ptcpServer->nextPendingConnection();
     connect(pClientSocket, SIGNAL(disconnected()),pClientSocket, SLOT(deleteLater())) ;
     connect(pClientSocket, SIGNAL(readyRead()),this, SLOT(slotReadClient()));
-    sendToClient(pClientSocket,"yes");
+    //sendToClient(pClientSocket,"yes");
+
+
+
+
     }
 
     MainWindow::~MainWindow()
@@ -67,26 +55,28 @@
         file.open(QIODevice::ReadWrite |  QIODevice::Truncate);
        QByteArray b;
        QString h;
-        for (int o=0;o<12;o++)
+        for (int o=0;o<vec.size();o++)
         {
             h=QString::number(vec.at(o));
             h+="\n";
             b=h.toUtf8();
-
             file.write(b);
         }
+        soc.close();
         file.close();
         delete ui;
         delete web;
     }
 
-    void MainWindow::reqq(QByteArray a)             //запрос в БД
+    void MainWindow::reqq(const char *a)             //запрос в БД
     {
         qDebug()<<a;
+
+
         QNetworkRequest request(apiUrl);
-        reply = manager.post(request, a);
-        QObject::connect(reply, SIGNAL(finished()),this, SLOT(getReplyFinished()));
-        QObject::connect(reply, SIGNAL(readyRead()), this, SLOT(readyReadReply()));
+        reply = manager.post(request,a);
+       /* QObject::connect(reply, SIGNAL(finished()),this, SLOT(getReplyFinished()));
+        QObject::connect(reply, SIGNAL(readyRead()), this, SLOT(readyReadReply()));*/
     }
 
     void MainWindow::getReplyFinished()             //после запроса в БД clicHouse
@@ -101,7 +91,7 @@
 
         pSocket->setParent(this);
 
-        qDebug()<<"s";
+        //qDebug()<<"s";
         connect(pSocket, &QWebSocket::textMessageReceived,
                 this, &MainWindow::processMessage);
         connect(pSocket, &QWebSocket::disconnected,
@@ -115,38 +105,30 @@
 
     void MainWindow::slotReadClient()               //чтение данных из сокета с распредилителя
     {
-        QTcpSocket* pClientSocket = (QTcpSocket*)sender();
-        /*QDataStream in(pClientSocket);
-        in.setVersion(QDataStream::Qt_5_3);
-        for (;;) {
-        if (!m_nNextBlockSize) {
-        if (pClientSocket->bytesAvailable() < sizeof(quint16)) {
-        break;
-        }
-        in>> m_nNextBlockSize;
-        }
-        if (pClientSocket->bytesAvailable() < m_nNextBlockSize) {
-        break;
-        }
-        QString str;
 
-        in>>  str;  //полученные данные
 
-        sendToClient(pClientSocket,"yes");
+            QString k (pClientSocket->readAll());
+            QStringList list;
+                if(k.size()>1)
+                {
+                list=k.split("/");
+                }
 
-        }*/
 
-        QString data(pClientSocket->readAll().toStdString().data());
+                emit sig1(list);
 
-        qDebug()<<data;
-        //qDebug()<<pClientSocket->readAll();
+        //pClientSocket->readAll());
+
+
+
+
     }
 
     void MainWindow::readyReadReply()       //ответ на запрос в БД clickHouse
     {
         QString data(reply->readAll().toStdString().data());
 
-        qDebug()<<data;
+       qDebug()<<data;
 
        /* QJsonDocument doc=QJsonDocument::fromJson(reply->readAll());
         QJsonArray ar=doc.array();
@@ -158,6 +140,7 @@
 
     void MainWindow::on_pushButton_clicked()
     {
+        ui->pushButton->setDisabled(true);
         QString m;
         m= "http://";
         m+=ui->lineEdit->text();
@@ -169,15 +152,92 @@
         m+="&password=";
         m+=ui->lineEdit_4->text();
         apiUrl.setUrl(m);
-        this->hide();
+        //this->hide();
+        sqlConnect();
+        refreshDB();
+        soc.connectToHost(ui->lineEdit_2->text(),ui->spinBox_2->value());
 
+        ui->label_16->setText("ClickHouse connected");
 
-
-
-        //reqq("CREATE TABLE test.opc (timestamp DateTime,typee Int16,param Int16,value Float32,prev Float32) ENGINE = MergeTree() ORDER BY (timestamp) SETTINGS index_granularity = 8192");
+        m_ptcpServer=new QTcpServer(this);
+        connect(m_ptcpServer, SIGNAL(newConnection() ),this, SLOT(slotNewConnection())) ;
+        if (!m_ptcpServer->listen(QHostAddress::Any, ui->spinBox_3->value()))
+        {
+        QMessageBox::critical(nullptr,
+        "Server Error",
+        "Unable to start the server:"
+        + m_ptcpServer->errorString()) ;
+        m_ptcpServer->close( );
+        }
+       // m_ptcpServer->waitForNewConnection(9999999);
+        //reqq("DROP TABLE test.opc");
+        //reqq("CREATE TABLE test.opc (timestamp DateTime DEFAULT NOW(),typee Int16,param Int16,value t32,prev Float32) ENGINE = MergeTree() ORDER BY (timestamp) SETTINGS index_granularity = 8192");
     }
 
-    void MainWindow::sendToClient(QTcpSocket* pSocket, const QString& str)          //отправка клиенту сокета
+    void MainWindow::slot1(QStringList list)
+    {
+
+
+        ui->label->setText("sd");
+        float porog=1;
+
+        for (int i=0;i<list.size();i++)
+        {
+            if(!list.at(i).isEmpty())
+            {
+
+               bool t= list.at(i).toInt()<vec.at(count);
+               count++;
+               //qDebug()<<count;
+               if(count>=vec.size())
+               {
+
+                   count=0;
+               }
+
+               QString s,reqqqq,p,por;
+               s=QString::number(typee);
+               p=QString::number(count);
+               por=QString::number(porog);
+               //qDebug()<<s<<p;
+               reqqqq="INSERT INTO test.opc (typee, param, value,prev) VALUES (";
+               reqqqq+=s;
+               reqqqq+=",";
+               reqqqq+=p;
+               reqqqq+=",";
+               reqqqq+=list.at(i);
+               reqqqq+=",";
+
+
+               if(!t)
+               {
+                   porog=list.at(i).toFloat()/vec.at(count);
+                   qDebug()<<porog<<list.at(i).toInt()<<"/"<<vec.at(count);
+                   por=QString::number(porog);
+                   QString h;
+                   h=s;
+                   h+=" ";
+                   h+=p;
+                   h+=" ";
+                   h+=por;
+                   h+=" ";
+                   QByteArray bu(h.toUtf8());
+                   //qDebug()<<h;
+                   sendTelega(bu);
+               }
+
+               reqqqq+=por;
+               reqqqq+=")";
+               std::string b=reqqqq.toStdString();
+               const char *v=b.data();
+               reqq(v);
+
+
+            }
+        }
+    }
+
+    void MainWindow::sendToClient(QTcpSocket* pSocket, const QString& str)          //отправка клиенту сокета для распредилителя
     {
     QByteArray arrBlock;
     QDataStream out(&arrBlock, QIODevice::WriteOnly);
@@ -191,7 +251,7 @@
     void MainWindow::sendTelega(QByteArray a)                                       //отправка даннаых в Телеграмм
     {
 
-        soc.connectToHost("172.20.10.4",8888);
+
         soc.write(a);
 
 
@@ -201,10 +261,10 @@
     {
         QSqlDatabase db = QSqlDatabase::addDatabase("QMYSQL3");
 
-           db.setHostName("172.20.10.10");
+           db.setHostName(ui->lineEdit_5->text());
            db.setDatabaseName("progdb");
-           db.setUserName("root");
-           db.setPassword("0000");
+           db.setUserName(ui->lineEdit_6->text());
+           db.setPassword(ui->lineEdit_7->text());
            bool ok = db.open();
            return ok;
     }
@@ -220,19 +280,17 @@
 
     void MainWindow::slotReadyRead()                                                  //чтение при отправке на телегу
     {
-        while(soc.bytesAvailable()>0)
-           {
-               qDebug()<<soc.readAll();
-           }
 
-        soc.close();
+               qDebug()<<soc.readAll();
+
     }
 
 
 
 void MainWindow::slotConnected()    //конект с телеграмом
 {
-    qDebug()<<"s";
+    ui->label_14->setText("connect To Telegramm");
+
 }
 void MainWindow::slotError(QAbstractSocket::SocketError err)            //ошибки при конекте с телегой
 {
@@ -256,8 +314,8 @@ void MainWindow::socketDisconnected()
 void MainWindow::refreshDB()
 {
     QSqlQuery query;
-    int cb=ui->comboBox->currentIndex();
-    QString j=QString::number(cb);
+    typee=ui->comboBox->currentIndex();
+    QString j=QString::number(typee);
     QString l;
     l+="SELECT porog FROM temp WHERE type=";
     l+=j;
@@ -270,4 +328,5 @@ void MainWindow::refreshDB()
     query.next();
     //qDebug()<<vec.at(e);
     }
+    ui->label_15->setText("SQL connected");
 }
